@@ -4,8 +4,24 @@ using System.Linq;
 
 namespace StateMachine
 {
+    /// <summary>
+    /// 用于配置AutoMapper的Profile类。
+    /// 使用方法见 http://automapper.readthedocs.io/en/latest/Configuration.html#profile-instances
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Mapper.Initialize(cfg =>
+    /// {
+    ///    cfg.AddProfile<StateMachineAutoMapperProfile>();
+    /// });
+    /// ]]>
+    /// </code>
+    /// </example>
     public class StateMachineAutoMapperProfile : Profile
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public StateMachineAutoMapperProfile()
         {
             var statusTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()

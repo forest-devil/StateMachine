@@ -4,7 +4,7 @@ using System;
 
 namespace StateMachine
 {
-    public class StringStatusJsonConverter : JsonConverter
+    internal class StringStatusJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

@@ -37,18 +37,28 @@ namespace StateMachineTest
             Assert.AreEqual("已提交", s1.ToString());
 
             //这种方法适用于字段类型为string的Entity，省去了Parse
-            var article = new ArticleEntity { Status = "已发布" };
-            var s2 = new MyStatus(article.Status);
+            var article2 = new ArticleEntity { Status = "已发布" };
+            var s2 = new MyStatus(article2.Status);
             Assert.AreEqual(ArticleStatus.已发布, s2.Value);
             Assert.AreEqual("已发布", s2.ToString());
 
             //也可以接受字段类型为enum的Entity
-            var article2 = new ArticleEntityOfEnum { Status = ArticleStatus.已发布 };
-            var s3 = new MyStatus(article.Status);
+            var article3 = new ArticleEntityOfEnum { Status = ArticleStatus.已发布 };
+            var s3 = new MyStatus(article3.Status);
             Assert.AreEqual(ArticleStatus.已发布, s3.Value);
             Assert.AreEqual("已发布", s3.ToString());
 
             //序列化、反序列化
+            var s4 = new MyStatus(ArticleStatus.已发布);
+            Assert.AreEqual("\"已发布\"", JsonConvert.SerializeObject(s4));
+            var d4 = (MyStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MyStatus));
+            Assert.AreEqual(ArticleStatus.已发布, d4.Value);
+
+            var s5 = new MySimplifiedStatus(ArticleStatus.已发布);
+            Assert.AreEqual("\"已发布\"", JsonConvert.SerializeObject(s4));
+            var d5 = (MySimplifiedStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MySimplifiedStatus));
+            Assert.AreEqual(ArticleStatus.已发布, d5.Value);
+
             var articleDto = Mapper.Map<ArticleDto>(articles[5]);
             Assert.AreEqual("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", JsonConvert.SerializeObject(articleDto));
             var dto = (ArticleDto)JsonConvert.DeserializeObject("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", typeof(ArticleDto));

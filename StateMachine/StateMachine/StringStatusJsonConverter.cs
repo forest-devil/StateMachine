@@ -6,10 +6,6 @@ namespace StateMachine
 {
     public class StringStatusJsonConverter : JsonConverter
     {
-        public override bool CanRead => true;
-
-        public override bool CanWrite => true;
-
         public override bool CanConvert(Type objectType)
         {
             return objectType.IsAssignableFrom(typeof(Status<,,>));

@@ -9,19 +9,19 @@ namespace StateMachine
     /// <summary>
     /// 状态基类型
     /// </summary>
-    /// <typeparam name="TStatus">状态Enum类型</typeparam>
-    /// <typeparam name="TOperation">操作Enum类型</typeparam>
-    /// <typeparam name="T">自引用，用于接口方法的返回类型</typeparam>
+    /// <typeparam name="TStatusEnum">状态Enum类型</typeparam>
+    /// <typeparam name="TOperationEnum">操作Enum类型</typeparam>
+    /// <typeparam name="TStatus">自引用，用于接口方法的返回类型</typeparam>
     [JsonConverter(typeof(StringStatusJsonConverter))]
-    public abstract class Status<TStatus, TOperation, T> : IStatus<TStatus, TOperation, T>
-        where TStatus : struct, IComparable, IConvertible, IFormattable         // 实际上要求是Enum，但是语法不支持直接写Enum
-        where TOperation : struct, IComparable, IConvertible, IFormattable       // 实际上要求是Enum，但是语法不支持直接写Enum
-        where T : Status<TStatus, TOperation, T>
+    public abstract class Status<TStatusEnum, TOperationEnum, TStatus> : IStatus<TStatusEnum, TOperationEnum, TStatus>
+        where TStatusEnum : struct          // 实际上要求是Enum，但是语法不支持直接写Enum
+        where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
+        where TStatus : Status<TStatusEnum, TOperationEnum, TStatus>
     {
-        private static readonly Lazy<IEnumerable<TOperation>> _usedOperations = new Lazy<IEnumerable<TOperation>>(
+        private static readonly Lazy<IEnumerable<TOperationEnum>> _usedOperations = new Lazy<IEnumerable<TOperationEnum>>(
             () => Workflow.Instance.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
 
-        private static readonly Lazy<IEnumerable<TStatus>> _usedStatuses = new Lazy<IEnumerable<TStatus>>(
+        private static readonly Lazy<IEnumerable<TStatusEnum>> _usedStatuses = new Lazy<IEnumerable<TStatusEnum>>(
                 () => Workflow.Instance.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key));
 
         /// <summary>
@@ -32,11 +32,11 @@ namespace StateMachine
         {
             switch (status)
             {
-                case TStatus statusValue:
+                case TStatusEnum statusValue:
                     Value = statusValue;
                     break;
 
-                case string statusStr when Enum.TryParse(statusStr, out TStatus statusValue):
+                case string statusStr when Enum.TryParse(statusStr, out TStatusEnum statusValue):
                     Value = statusValue;
                     break;
             }
@@ -45,39 +45,41 @@ namespace StateMachine
         /// <summary>
         /// 本类型能转换到的状态列表。如果某个状态通过任何转换规则都不可达，将不会列出
         /// </summary>
-        public static IEnumerable<TOperation> UsedOperations { get { return _usedOperations.Value; } }
+        public static IEnumerable<TOperationEnum> UsedOperations { get { return _usedOperations.Value; } }
 
         /// <summary>
         /// 本类型所涉及的操作列表，未使用的操作将不会列出
         /// </summary>
-        public static IEnumerable<TStatus> UsedStatuses { get { return _usedStatuses.Value; } }
+        public static IEnumerable<TStatusEnum> UsedStatuses { get { return _usedStatuses.Value; } }
 
         /// <summary>
         /// [只读] Enum类型的内部状态值
         /// </summary>
-        public TStatus Value { get; private set; }
+        public TStatusEnum Value { get; private set; }
+
+        object IStatus.Value => Value;
 
         /// <summary>
-        /// 生成筛选函数，用于IEnumerable类型，并且状态字段类型为<typeparamref name="T"/>
+        /// 生成筛选函数，用于IEnumerable类型，并且状态字段类型为<typeparamref name="TStatus"/>
         /// </summary>
-        /// <typeparam name="TObject">包含字段类型为<typeparamref name="T"/>的对象类型</typeparam>
+        /// <typeparam name="TObject">包含字段类型为<typeparamref name="TStatus"/>的对象类型</typeparam>
         /// <param name="predicate">属性表达式，例如<example><code>obj => obj.Status</code></example></param>
         /// <param name="statuses">要筛选的状态</param>
         /// <returns></returns>
-        public static Func<TObject, bool> GetFilter<TObject>(Func<TObject, T> predicate, params TStatus[] statuses)
+        public static Func<TObject, bool> GetFilter<TObject>(Func<TObject, TStatus> predicate, params TStatusEnum[] statuses)
         {
             var casted = statuses.Select(s => s.ToString()).ToArray();
             return obj => casted.Contains(predicate(obj).ToString());
         }
 
         /// <summary>
-        /// 生成筛选表达式，用于IQueryable类型，并且状态字段类型为<typeparamref name="TStatus"/>
+        /// 生成筛选表达式，用于IQueryable类型，并且状态字段类型为<typeparamref name="TStatusEnum"/>
         /// </summary>
-        /// <typeparam name="TObject">包含字段类型为<typeparamref name="TStatus"/>的对象类型</typeparam>
+        /// <typeparam name="TObject">包含字段类型为<typeparamref name="TStatusEnum"/>的对象类型</typeparam>
         /// <param name="predicate">属性表达式，例如<example><code>obj => obj.Status</code></example></param>
         /// <param name="statuses">要筛选的状态</param>
         /// <returns></returns>
-        public static Expression<Func<TObject, bool>> GetFilter<TObject>(Expression<Func<TObject, TStatus>> predicate, params TStatus[] statuses)
+        public static Expression<Func<TObject, bool>> GetFilter<TObject>(Expression<Func<TObject, TStatusEnum>> predicate, params TStatusEnum[] statuses)
         {
             var memberExpr = (MemberExpression)predicate.Body;
             var paramExpr = (ParameterExpression)memberExpr.Expression;
@@ -106,7 +108,7 @@ namespace StateMachine
         /// <param name="predicate">属性表达式，例如<example><code>obj => obj.Status</code></example></param>
         /// <param name="statuses">要筛选的状态</param>
         /// <returns></returns>
-        public static Expression<Func<TObject, bool>> GetFilter<TObject>(Expression<Func<TObject, string>> predicate, params TStatus[] statuses)
+        public static Expression<Func<TObject, bool>> GetFilter<TObject>(Expression<Func<TObject, string>> predicate, params TStatusEnum[] statuses)
         {
             var memberExpr = (MemberExpression)predicate.Body;
             var paramExpr = (ParameterExpression)memberExpr.Expression;
@@ -134,9 +136,9 @@ namespace StateMachine
         /// <param name="start">原状态</param>
         /// <param name="operation">操作</param>
         /// <returns>结果状态</returns>
-        public static T operator +(Status<TStatus, TOperation, T> start, TOperation operation)
+        public static TStatus operator +(Status<TStatusEnum, TOperationEnum, TStatus> start, TOperationEnum operation)
         {
-            var tmp = (T)start.MemberwiseClone();
+            var tmp = (TStatus)start.MemberwiseClone();
             return tmp.Transition(operation);
         }
 
@@ -154,7 +156,7 @@ namespace StateMachine
         /// </summary>
         /// <param name="operation">操作</param>
         /// <returns>this</returns>
-        public T Transition(TOperation operation)
+        public TStatus Transition(TOperationEnum operation)
         {
             try
             {
@@ -162,7 +164,12 @@ namespace StateMachine
             }
             catch (NullReferenceException) { }
             catch (KeyNotFoundException) { }
-            return (T)this;
+            return (TStatus)this;
+        }
+
+        public object Transition(object operation)
+        {
+            return Transition((TOperationEnum)operation);
         }
 
         /// <summary>
@@ -175,7 +182,7 @@ namespace StateMachine
         ///        (ArticleOperation.提交, ArticleStatus.已提交),
         ///        (ArticleOperation.发布, ArticleStatus.已发布));
         /// </example>
-        protected static void Set(TStatus status, params (TOperation operation, TStatus result)[] rhs)
+        protected static void Set(TStatusEnum status, params (TOperationEnum operation, TStatusEnum result)[] rhs)
         {
             foreach (var (operation, result) in rhs)
                 Set(status, operation, result);
@@ -191,22 +198,22 @@ namespace StateMachine
         ///    Set(ArticleStatus.已提交,
         ///        ArticleOperation.发布, ArticleStatus.已发布);
         /// </example>
-        protected static void Set(TStatus status, TOperation operation, TStatus result)
+        protected static void Set(TStatusEnum status, TOperationEnum operation, TStatusEnum result)
         {
             var oprations = Workflow.Instance[status];
             if (!oprations.ContainsKey(operation))
                 oprations.Add(operation, result);
         }
 
-        private sealed class Workflow : Dictionary<TStatus, Dictionary<TOperation, TStatus>>
+        private sealed class Workflow : Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>>
         {
             private static readonly Lazy<Workflow> lazy = new Lazy<Workflow>(() => new Workflow());
 
             private Workflow()
             {
-                foreach (TStatus status in Enum.GetValues(typeof(TStatus)))
+                foreach (TStatusEnum status in Enum.GetValues(typeof(TStatusEnum)))
                 {
-                    Add(status, new Dictionary<TOperation, TStatus>());
+                    Add(status, new Dictionary<TOperationEnum, TStatusEnum>());
                 }
             }
 

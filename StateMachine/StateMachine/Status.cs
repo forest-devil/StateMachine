@@ -63,6 +63,7 @@ namespace StateMachine
         public TStatusEnum Value { get; private set; }
 
         object IStatus.Value => Value;
+
         /// <summary>
         /// 加号操作，一般只用于"+="操作。原状态+操作=结果状态
         /// </summary>

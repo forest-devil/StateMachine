@@ -151,7 +151,7 @@ namespace StateMachineTest
             Assert.AreEqual("已修改,已提交,已发布", string.Join(",", s3.ValidStatuses));
             Assert.AreEqual("提交,发布,撤回", string.Join(",", s3.ValidOperations));
         }
-        
+
         [TestMethod]
         public void Test05_01_FilterByStatus()
         {
@@ -190,7 +190,6 @@ namespace StateMachineTest
             var q4 = queriedArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
             Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", q4.Select(a => a.Title)));
         }
-
 
         [TestMethod]
         public void Test05_03_FilterByStatusForDto()

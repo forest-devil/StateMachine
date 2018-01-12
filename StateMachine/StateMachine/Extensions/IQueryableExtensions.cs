@@ -73,6 +73,5 @@ namespace StateMachine.Extensions
             }
             return source.Where(Expression.Lambda<Func<TObject, bool>>(bodyExpr, paramList));
         }
-
     }
 }

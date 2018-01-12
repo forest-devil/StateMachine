@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace StateMachine
@@ -20,6 +19,7 @@ namespace StateMachine
         /// <param name="operation">要执行的操作</param>
         /// <returns>自身，用于链式调用写法</returns>
         object Transition(object operation);
+
         /// <summary>
         /// 本类型能转换到的状态列表。如果某个状态通过任何转换规则都不可达，将不会列出
         /// </summary>

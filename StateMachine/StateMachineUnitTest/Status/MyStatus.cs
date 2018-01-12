@@ -13,6 +13,7 @@ namespace StateMachineTest
             Set(ArticleStatus.已发布,
                 (ArticleOperation.撤回, ArticleStatus.已修改),
                 (ArticleOperation.存档, ArticleStatus.已存档));
+            Seal();
         }
 
         public MyStatus(object status) : base(status)

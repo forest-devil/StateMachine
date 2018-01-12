@@ -18,13 +18,6 @@ namespace StateMachine
         where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
         where TStatus : Status<TStatusEnum, TOperationEnum, TStatus>
     {
-        private static readonly Lazy<IEnumerable<TOperationEnum>> _validOperations = new Lazy<IEnumerable<TOperationEnum>>(
-            () => Workflow.Instance.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
-
-        private static readonly Lazy<IEnumerable<TStatusEnum>> _validStatuses = new Lazy<IEnumerable<TStatusEnum>>(
-            () => Workflow.Instance.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key)
-                .Concat(Workflow.Instance.SelectMany(kvp => kvp.Value.Values)).Distinct());
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -40,20 +33,23 @@ namespace StateMachine
                 case string statusStr when Enum.TryParse(statusStr, out TStatusEnum statusValue):
                     Value = statusValue;
                     break;
+
+                default:
+                    throw new ArgumentException();
             }
         }
 
         /// <summary>
         /// 本类型能转换到的状态列表。如果某个状态通过任何转换规则都不可达，将不会列出
         /// </summary>
-        public IEnumerable<TOperationEnum> ValidOperations => _validOperations.Value;
+        public IEnumerable<TOperationEnum> ValidOperations => Workflow.Instance.ValidOperations;
 
         IEnumerable IStatus.ValidOperations => ValidOperations;
 
         /// <summary>
         /// 本类型所涉及的操作列表，未使用的操作将不会列出
         /// </summary>
-        public IEnumerable<TStatusEnum> ValidStatuses => _validStatuses.Value;
+        public IEnumerable<TStatusEnum> ValidStatuses => Workflow.Instance.ValidStatuses;
 
         IEnumerable IStatus.ValidStatuses => ValidStatuses;
 
@@ -92,6 +88,9 @@ namespace StateMachine
         /// <returns>this</returns>
         public TStatus Transition(TOperationEnum operation)
         {
+            if (!Workflow.Instance.Sealed)
+                throw new InvalidOperationException();
+
             try
             {
                 Value = Workflow.Instance[Value][operation];
@@ -112,6 +111,22 @@ namespace StateMachine
         }
 
         /// <summary>
+        /// 密封工作流状态机
+        /// 密封之前可以用Set()定义新的状态转换，但Transition()、ValidStatuses、ValidOperations都不可用
+        /// 密封之后不能再定义状态转换，上述几个成员变为可用
+        /// 密封操作会清理状态机中空的节点
+        /// </summary>
+        protected static void Seal()
+        {
+            var emptyKeys = Workflow.Instance.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
+            foreach (var key in emptyKeys)
+            {
+                Workflow.Instance.Remove(key);
+            }
+            Workflow.Instance.Sealed = true;
+        }
+
+        /// <summary>
         /// 设置转换规则，可以一次设置多个分支。建议在Status具体类的static构造函数中调用，并适当格式化
         /// </summary>
         /// <param name="status">原状态</param>
@@ -123,12 +138,15 @@ namespace StateMachine
         /// </example>
         protected static void Set(TStatusEnum status, params (TOperationEnum operation, TStatusEnum result)[] rhs)
         {
+            if (Workflow.Instance.Sealed)
+                throw new InvalidOperationException();
+
             foreach (var (operation, result) in rhs)
                 Set(status, operation, result);
         }
 
         /// <summary>
-        /// 设置转换规则
+        /// 设置转换规则。只能在Seal()之前调用，否则抛出异常
         /// </summary>
         /// <param name="status">原状态</param>
         /// <param name="operation">操作</param>
@@ -139,17 +157,27 @@ namespace StateMachine
         /// </example>
         protected static void Set(TStatusEnum status, TOperationEnum operation, TStatusEnum result)
         {
+            if (Workflow.Instance.Sealed)
+                throw new InvalidOperationException();
+
             var oprations = Workflow.Instance[status];
             if (!oprations.ContainsKey(operation))
                 oprations.Add(operation, result);
         }
 
         /// <summary>
-        /// 本类单例，封装了工作流(状态机)的逻辑，内部使用两层嵌套的Dictionary实现
+        /// 本类嵌套单例，封装了工作流(状态机)的逻辑，内部使用两层嵌套的Dictionary实现
         /// </summary>
         private sealed class Workflow : Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>>
         {
             private static readonly Lazy<Workflow> _workflow = new Lazy<Workflow>(() => new Workflow());
+
+            private readonly Lazy<IEnumerable<TOperationEnum>> _validOperations = new Lazy<IEnumerable<TOperationEnum>>(
+                () => Instance.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
+
+            private readonly Lazy<IEnumerable<TStatusEnum>> _validStatuses = new Lazy<IEnumerable<TStatusEnum>>(
+                () => Instance.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key)
+                    .Concat(Instance.SelectMany(kvp => kvp.Value.Values)).Distinct());
 
             private Workflow()
             {
@@ -160,6 +188,9 @@ namespace StateMachine
             }
 
             public static Workflow Instance => _workflow.Value;
+            public bool Sealed { get; set; } = false;
+            public IEnumerable<TOperationEnum> ValidOperations => Sealed ? _validOperations.Value : null;
+            public IEnumerable<TStatusEnum> ValidStatuses => Sealed ? _validStatuses.Value : null;
         }
     }
 }

@@ -76,10 +76,7 @@ namespace StateMachine
         /// 转化为字符串，输出状态字符串，已重载
         /// </summary>
         /// <returns>状态字符串</returns>
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
+        public override string ToString() => Value.ToString();
 
         /// <summary>
         /// 转换状态
@@ -105,10 +102,7 @@ namespace StateMachine
         /// </summary>
         /// <param name="operation">操作</param>
         /// <returns>this</returns>
-        public object Transition(object operation)
-        {
-            return Transition((TOperationEnum)operation);
-        }
+        public object Transition(object operation) => Transition((TOperationEnum)operation);
 
         /// <summary>
         /// 密封工作流状态机

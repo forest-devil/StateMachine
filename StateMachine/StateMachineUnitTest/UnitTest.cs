@@ -23,6 +23,10 @@ namespace StateMachineTest
 
         static StateMachineUnitTest()
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = new List<JsonConverter> { new StringStatusJsonConverter() }
+            };
             Mapper.Initialize(cfg =>
             {
                 cfg.AddProfile<StateMachineAutoMapperProfile>();

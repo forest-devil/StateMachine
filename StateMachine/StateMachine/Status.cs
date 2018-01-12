@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,6 @@ namespace StateMachine
     /// <typeparam name="TStatusEnum">状态Enum类型</typeparam>
     /// <typeparam name="TOperationEnum">操作Enum类型</typeparam>
     /// <typeparam name="TStatus">自引用，用于接口方法的返回类型</typeparam>
-    [JsonConverter(typeof(StringStatusJsonConverter))]
     public abstract class Status<TStatusEnum, TOperationEnum, TStatus> : IStatus<TStatusEnum, TOperationEnum, TStatus>
         where TStatusEnum : struct          // 实际上要求是Enum，但是语法不支持直接写Enum
         where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum

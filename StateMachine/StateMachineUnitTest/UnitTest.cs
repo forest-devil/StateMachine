@@ -139,59 +139,23 @@ namespace StateMachineTest
         [TestMethod]
         public void Test04_UsedStatusesAndOperations()
         {
-            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", MyStatus.UsedStatuses));
-            Assert.AreEqual("提交,发布,撤回", string.Join(",", MyStatus.UsedOperations));
+            var s1 = new MyStatus(ArticleStatus.已存档);
+            Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", s1.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", s1.ValidOperations));
 
-            Assert.AreEqual("已修改,已发布", string.Join(",", MySimplifiedStatus.UsedStatuses));
-            Assert.AreEqual("发布,撤回", string.Join(",", MySimplifiedStatus.UsedOperations));
+            var s2 = new MySimplifiedStatus(ArticleStatus.已发布);
+            Assert.AreEqual("已修改,已发布", string.Join(",", s2.ValidStatuses));
+            Assert.AreEqual("发布,撤回", string.Join(",", s2.ValidOperations));
 
-            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", MyComplicatedStatus.UsedStatuses));
-            Assert.AreEqual("提交,发布,撤回", string.Join(",", MyComplicatedStatus.UsedOperations));
+            var s3 = new MyComplicatedStatus(ArticleStatus.已发布);
+            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", s3.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回", string.Join(",", s3.ValidOperations));
         }
-
+        
         [TestMethod]
-        public void Test05_01_GetFilter()
+        public void Test05_01_FilterByStatus()
         {
-            //模拟从数据库取出，类型是IQueriable<T>
-            var queriedArticles = articles.AsQueryable();
-
-            var filter1 = MyStatus.GetFilter<ArticleEntity>(article => article.Status, ArticleStatus.已修改);
-            Assert.AreEqual("article => (article.Status == \"已修改\")", filter1.ToString());
-            Assert.AreEqual("文章1", string.Join(",", queriedArticles.Where(filter1).Select(a => a.Title)));
-
-            var filter2 = MyStatus.GetFilter<ArticleEntity>(article => article.Status, ArticleStatus.已提交);
-            Assert.AreEqual("文章2,文章4", string.Join(",", queriedArticles.Where(filter2).Select(a => a.Title)));
-
-            var filter3 = MyStatus.GetFilter<ArticleEntity>(article => article.Status, ArticleStatus.已发布);
-            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", queriedArticles.Where(filter3).Select(a => a.Title)));
-
-            var filter4 = MyStatus.GetFilter<ArticleEntity>(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
-            Assert.AreEqual("article => ((article.Status == \"已提交\") Or (article.Status == \"已发布\"))", filter4.ToString());
-            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", queriedArticles.Where(filter4).Select(a => a.Title)));
-        }
-
-        [TestMethod]
-        public void Test05_02_GetFilterForEntitiesWithEnumProperty()
-        {
-            var queriedArticles = Mapper.Map<IEnumerable<ArticleEntityOfEnum>>(articles).AsQueryable();
-
-            var filter1 = MyStatus.GetFilter<ArticleEntityOfEnum>(article => article.Status, ArticleStatus.已修改);
-            Assert.AreEqual("文章1", string.Join(",", queriedArticles.Where(filter1).Select(a => a.Title)));
-
-            var filter2 = MyStatus.GetFilter<ArticleEntityOfEnum>(article => article.Status, ArticleStatus.已提交);
-            Assert.AreEqual("文章2,文章4", string.Join(",", queriedArticles.Where(filter2).Select(a => a.Title)));
-
-            var filter3 = MyStatus.GetFilter<ArticleEntityOfEnum>(article => article.Status, ArticleStatus.已发布);
-            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", queriedArticles.Where(filter3).Select(a => a.Title)));
-
-            var filter4 = MyStatus.GetFilter<ArticleEntityOfEnum>(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
-            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", queriedArticles.Where(filter4).Select(a => a.Title)));
-        }
-
-        [TestMethod]
-        public void Test05_03_FilterByStatus()
-        {
-            //模拟从数据库取出，类型是IQueriable<T>
+            //模拟从数据库取出Entity，类型是IQueriable<T>
             var queriedArticles = articles.AsQueryable();
 
             var q1 = queriedArticles.FilterByStatus(article => article.Status, ArticleStatus.已修改);
@@ -208,8 +172,10 @@ namespace StateMachineTest
         }
 
         [TestMethod]
-        public void Test05_04_FilterByStatusForEntitiesWithEnumProperty()
+        public void Test05_02_FilterByStatusForEntitiesWithEnumProperty()
         {
+            // 模拟从数据库取出Entity，类型是IQueriable<T>。
+            // 这种Entity的Status字段用了Enum类型，为了方便此处直接映射转换
             var queriedArticles = Mapper.Map<IEnumerable<ArticleEntityOfEnum>>(articles).AsQueryable();
 
             var q1 = queriedArticles.FilterByStatus(article => article.Status, ArticleStatus.已修改);
@@ -227,7 +193,7 @@ namespace StateMachineTest
 
 
         [TestMethod]
-        public void Test05_05_FilterByStatusForDto()
+        public void Test05_03_FilterByStatusForDto()
         {
             //模拟从数据库取出并映射成Dto，类型是IEnumerable<T>
             var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(articles);
@@ -284,17 +250,17 @@ namespace StateMachineTest
             //模拟从数据库取出并映射成Dto，类型是IEnumerable<T>
             var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(articles);
 
-            var filter1 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已修改);
-            Assert.AreEqual("文章1", string.Join(",", articleDtos.Where(filter1).Select(a => a.Title)));
+            var q1 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已修改);
+            Assert.AreEqual("文章1", string.Join(",", q1.Select(a => a.Title)));
 
-            var filter2 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已提交);
-            Assert.AreEqual("文章2,文章4", string.Join(",", articleDtos.Where(filter2).Select(a => a.Title)));
+            var q2 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交);
+            Assert.AreEqual("文章2,文章4", string.Join(",", q2.Select(a => a.Title)));
 
-            var filter3 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已发布);
-            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", articleDtos.Where(filter3).Select(a => a.Title)));
+            var q3 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已发布);
+            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", q3.Select(a => a.Title)));
 
-            var filter4 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
-            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", articleDtos.Where(filter4).Select(a => a.Title)));
+            var q4 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
+            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", q4.Select(a => a.Title)));
         }
 
         [TestMethod]
@@ -321,20 +287,20 @@ namespace StateMachineTest
             //模拟从数据库取出
             var entities = Mapper.Map<IEnumerable<ArticleEntityOfEnum>>(articles).AsQueryable();
 
-            var filter1 = MyStatus.GetFilter<ArticleEntityOfEnum>(article => article.Status, ArticleStatus.已修改);
-            Assert.AreEqual("文章1", string.Join(",", entities.Where(filter1).Select(a => a.Title)));
+            var f1 = entities.FilterByStatus(article => article.Status, ArticleStatus.已修改);
+            Assert.AreEqual("文章1", string.Join(",", f1.Select(a => a.Title)));
 
             //映射成Dto
             var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(entities);
 
-            var filter2 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已提交);
-            Assert.AreEqual("文章2,文章4", string.Join(",", articleDtos.Where(filter2).Select(a => a.Title)));
+            var d2 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交);
+            Assert.AreEqual("文章2,文章4", string.Join(",", d2.Select(a => a.Title)));
 
-            var filter3 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已发布);
-            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", articleDtos.Where(filter3).Select(a => a.Title)));
+            var d3 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已发布);
+            Assert.AreEqual("文章3,文章5,文章6", string.Join(",", d3.Select(a => a.Title)));
 
-            var filter4 = MyStatus.GetFilter<ArticleDto>(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
-            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", articleDtos.Where(filter4).Select(a => a.Title)));
+            var d4 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
+            Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", d4.Select(a => a.Title)));
         }
     }
 }

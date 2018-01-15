@@ -9,25 +9,36 @@ namespace StateMachine
     /// 工作流单例，由于类型参数包含TStatus，故每个TStatus都有一个单例
     /// 封装了工作流(状态机)的逻辑，内部使用两层嵌套的Dictionary实现
     /// </summary>
-    public abstract class Workflow : IWorkflow
+    public sealed class Workflow<TStatusEnum, TOperationEnum, TStatus> : IWorkflow<TStatusEnum, TOperationEnum>
+        where TStatusEnum : struct          // 实际上要求是Enum，但是语法不支持直接写Enum
+        where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
+        where TStatus : IStatus
     {
+        private static readonly Lazy<Workflow<TStatusEnum, TOperationEnum, TStatus>> _workflow
+            = new Lazy<Workflow<TStatusEnum, TOperationEnum, TStatus>>(
+                () => new Workflow<TStatusEnum, TOperationEnum, TStatus>());
+
+        private readonly Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>> _dictionary
+             = new Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>>();
+
+        private readonly Lazy<IEnumerable<TOperationEnum>> _validOperations = new Lazy<IEnumerable<TOperationEnum>>(
+            () => Instance._dictionary.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
+
+        private readonly Lazy<IEnumerable<TStatusEnum>> _validStatuses = new Lazy<IEnumerable<TStatusEnum>>(
+            () => Instance._dictionary.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key)
+                .Concat(Instance._dictionary.SelectMany(kvp => kvp.Value.Values)).Distinct());
+
         private bool _sealed = false;
 
-        private readonly Dictionary<object, Dictionary<object, object>> _dictionary
-             = new Dictionary<object, Dictionary<object, object>>();
-
-        private readonly Lazy<IEnumerable> _validOperations;
-
-        private readonly Lazy<IEnumerable> _validStatuses;
-
-        protected Workflow()
+        private Workflow()
         {
-            _validOperations = new Lazy<IEnumerable>(
-                () => _dictionary.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
-            _validStatuses = new Lazy<IEnumerable>(
-                () => _dictionary.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key)
-                    .Concat(_dictionary.SelectMany(kvp => kvp.Value.Values)).Distinct());
+            foreach (TStatusEnum status in Enum.GetValues(typeof(TStatusEnum)))
+            {
+                _dictionary.Add(status, new Dictionary<TOperationEnum, TStatusEnum>());
+            }
         }
+
+        public static Workflow<TStatusEnum, TOperationEnum, TStatus> Instance => _workflow.Value;
 
         public bool Sealed
         {
@@ -46,10 +57,22 @@ namespace StateMachine
             }
         }
 
-        public IEnumerable ValidOperations => _sealed ? _validOperations.Value : new List<object>();
-        public IEnumerable ValidStatuses => _sealed ? _validStatuses.Value : new List<object>();
+        public IEnumerable<TOperationEnum> ValidOperations => _sealed ? _validOperations.Value : new List<TOperationEnum>();
+        IEnumerable IWorkflow.ValidOperations => ValidOperations;
+        public IEnumerable<TStatusEnum> ValidStatuses => _sealed ? _validStatuses.Value : new List<TStatusEnum>();
+        IEnumerable IWorkflow.ValidStatuses => ValidStatuses;
 
-        public IWorkflow AddRule(object status, params (object operation, object result)[] rhs)
+        /// <summary>
+        /// 设置转换规则，可以一次设置多个分支。建议在Status具体类的static构造函数中调用，并适当格式化
+        /// </summary>
+        /// <param name="status">原状态</param>
+        /// <param name="rhs">转换规则，每一条为一个tuple，格式为(operation, result)</param>
+        /// <example>
+        ///     AddRule(ArticleStatus.已修改,
+        ///         (ArticleOperation.提交, ArticleStatus.已提交),
+        ///         (ArticleOperation.发布, ArticleStatus.已发布));
+        /// </example>
+        public IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, params (TOperationEnum operation, TStatusEnum result)[] rhs)
         {
             if (Sealed)
                 throw new InvalidOperationException();
@@ -60,7 +83,17 @@ namespace StateMachine
             return this;
         }
 
-        public IWorkflow AddRule(object status, object operation, object result)
+        /// <summary>
+        /// 设置转换规则。只能在Seal()之前调用，否则抛出异常
+        /// </summary>
+        /// <param name="status">原状态</param>
+        /// <param name="operation">操作</param>
+        /// <param name="result">结果状态</param>
+        /// <example>
+        ///     AddRule(ArticleStatus.已提交,
+        ///         ArticleOperation.发布, ArticleStatus.已发布);
+        /// </example>
+        public IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, TOperationEnum operation, TStatusEnum result)
         {
             if (Sealed)
                 throw new InvalidOperationException();
@@ -78,7 +111,7 @@ namespace StateMachine
         /// 密封之后不能再定义状态转换，上述几个成员变为可用
         /// 密封操作会清理状态机中空的节点
         /// </summary>
-        public IWorkflow Seal()
+        public IWorkflow<TStatusEnum, TOperationEnum> Seal()
         {
             Sealed = true;
             return this;
@@ -89,7 +122,7 @@ namespace StateMachine
         /// </summary>
         /// <param name="operation">操作</param>
         /// <returns>this</returns>
-        public virtual object Transition(object status, object operation)
+        public TStatusEnum Transition(TStatusEnum status, TOperationEnum operation)
         {
             if (!Sealed)
                 throw new InvalidOperationException();

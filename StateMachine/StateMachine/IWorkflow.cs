@@ -16,14 +16,6 @@ namespace StateMachine
         /// 所涉及的操作列表，未使用的操作将不会列出
         /// </summary>
         IEnumerable ValidStatuses { get; }
-
-        IWorkflow AddRule(object status, params (object operation, object result)[] rhs);
-
-        IWorkflow AddRule(object status, object operation, object result);
-
-        IWorkflow Seal();
-
-        object Transition(object status, object operation);
     }
 
     public interface IWorkflow<TStatusEnum, TOperationEnum> : IWorkflow
@@ -44,7 +36,7 @@ namespace StateMachine
 
         IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, TOperationEnum operation, TStatusEnum result);
 
-        new IWorkflow<TStatusEnum, TOperationEnum> Seal();
+        IWorkflow<TStatusEnum, TOperationEnum> Seal();
 
         TStatusEnum Transition(TStatusEnum status, TOperationEnum operation);
     }

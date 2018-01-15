@@ -56,10 +56,8 @@
     <Compile Include="IWorkflow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Status.cs" />
-    <Compile Include="StatusOfTStatusEnumAndTOperationEnumAndTStatus.cs" />
     <Compile Include="StringStatusJsonConverter.cs" />
     <Compile Include="Workflow.cs" />
-    <Compile Include="WorkflowOfTStatusEnumAndTOperationEnumAndTStatus.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

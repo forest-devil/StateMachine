@@ -11,13 +11,6 @@
         object Value { get; }
 
         IWorkflow Workflow { get; }
-
-        /// <summary>
-        /// 转换状态
-        /// </summary>
-        /// <param name="operation">要执行的操作</param>
-        /// <returns>自身，用于链式调用写法</returns>
-        object Transition(object operation);
     }
 
     /// <summary>

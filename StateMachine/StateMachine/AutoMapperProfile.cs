@@ -40,7 +40,7 @@ namespace StateMachine
                 CreateMap(statusType, typeof(string))
                     .ConstructUsing(status => status.ToString());
                 CreateMap(statusType, typeOfEnum)
-                    .ConstructUsing(status => statusType.GetProperty("Value").GetValue(status));
+                    .ConstructUsing(status => statusType.GetProperty("Value", typeOfEnum).GetValue(status));
             }
         }
     }

@@ -146,16 +146,16 @@ namespace StateMachineTest
         public void Test04_UsedStatusesAndOperations()
         {
             var s1 = new MyStatus(ArticleStatus.已存档);
-            Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", s1.Workflow.ValidStatuses.Cast<ArticleStatus>()));
-            Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", s1.Workflow.ValidOperations.Cast<ArticleOperation>()));
+            Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", s1.Workflow.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", s1.Workflow.ValidOperations));
 
             var s2 = new MySimplifiedStatus(ArticleStatus.已发布);
-            Assert.AreEqual("已修改,已发布", string.Join(",", s2.Workflow.ValidStatuses.Cast<ArticleStatus>()));
-            Assert.AreEqual("发布,撤回", string.Join(",", s2.Workflow.ValidOperations.Cast<ArticleOperation>()));
+            Assert.AreEqual("已修改,已发布", string.Join(",", s2.Workflow.ValidStatuses));
+            Assert.AreEqual("发布,撤回", string.Join(",", s2.Workflow.ValidOperations));
 
             var s3 = new MyComplicatedStatus(ArticleStatus.已发布);
-            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", s3.Workflow.ValidStatuses.Cast<ArticleStatus>()));
-            Assert.AreEqual("提交,发布,撤回", string.Join(",", s3.Workflow.ValidOperations.Cast<ArticleOperation>()));
+            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", s3.Workflow.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回", string.Join(",", s3.Workflow.ValidOperations));
         }
 
         [TestMethod]

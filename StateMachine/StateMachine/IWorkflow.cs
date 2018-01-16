@@ -5,8 +5,6 @@ namespace StateMachine
 {
     public interface IWorkflow
     {
-        bool Sealed { get; }
-
         /// <summary>
         /// 能转换到的状态列表。如果某个状态通过任何转换规则都不可达，将不会列出
         /// </summary>
@@ -35,8 +33,6 @@ namespace StateMachine
         IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, params (TOperationEnum operation, TStatusEnum result)[] rhs);
 
         IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, TOperationEnum operation, TStatusEnum result);
-
-        IWorkflow<TStatusEnum, TOperationEnum> Seal();
 
         TStatusEnum Transition(TStatusEnum status, TOperationEnum operation);
     }

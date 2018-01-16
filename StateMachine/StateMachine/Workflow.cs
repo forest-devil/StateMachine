@@ -18,11 +18,9 @@ namespace StateMachine
         protected readonly Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>> _dictionary
              = new Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>>();
 
-        protected readonly Lazy<IEnumerable<TOperationEnum>> _validOperations;
+        protected readonly List<TOperationEnum> _validOperations = new List<TOperationEnum>();
 
-        protected readonly Lazy<IEnumerable<TStatusEnum>> _validStatuses;
-
-        protected bool _sealed = false;
+        protected readonly List<TStatusEnum> _validStatuses = new List<TStatusEnum>();
 
         public Workflow()
         {
@@ -30,34 +28,11 @@ namespace StateMachine
             {
                 _dictionary.Add(status, new Dictionary<TOperationEnum, TStatusEnum>());
             }
-
-            _validOperations = new Lazy<IEnumerable<TOperationEnum>>(
-               () => _dictionary.SelectMany(kvp => kvp.Value).Select(kvp => kvp.Key).Distinct());
-            _validStatuses = new Lazy<IEnumerable<TStatusEnum>>(
-            () => _dictionary.Where(kvp => kvp.Value.Count > 0).Select(kvp => kvp.Key)
-                .Concat(_dictionary.SelectMany(kvp => kvp.Value.Values)).Distinct());
         }
 
-        public virtual bool Sealed
-        {
-            get => _sealed;
-            private set
-            {
-                if (!_sealed && value == true)
-                {
-                    var emptyKeys = _dictionary.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
-                    foreach (var key in emptyKeys)
-                    {
-                        _dictionary.Remove(key);
-                    }
-                    _sealed = value;
-                }
-            }
-        }
-
-        public virtual IEnumerable<TOperationEnum> ValidOperations => _sealed ? _validOperations.Value : new List<TOperationEnum>();
+        public virtual IEnumerable<TOperationEnum> ValidOperations => _validOperations;
         IEnumerable IWorkflow.ValidOperations => ValidOperations;
-        public virtual IEnumerable<TStatusEnum> ValidStatuses => _sealed ? _validStatuses.Value : new List<TStatusEnum>();
+        public virtual IEnumerable<TStatusEnum> ValidStatuses => _validStatuses;
         IEnumerable IWorkflow.ValidStatuses => ValidStatuses;
 
         /// <summary>
@@ -72,9 +47,6 @@ namespace StateMachine
         /// </example>
         public virtual IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, params (TOperationEnum operation, TStatusEnum result)[] rhs)
         {
-            if (Sealed)
-                throw new InvalidOperationException();
-
             foreach (var (operation, result) in rhs)
                 AddRule(status, operation, result);
 
@@ -93,25 +65,19 @@ namespace StateMachine
         /// </example>
         public virtual IWorkflow<TStatusEnum, TOperationEnum> AddRule(TStatusEnum status, TOperationEnum operation, TStatusEnum result)
         {
-            if (Sealed)
-                throw new InvalidOperationException();
-
             var oprations = _dictionary[status];
             if (!oprations.ContainsKey(operation))
+            {
                 oprations.Add(operation, result);
 
-            return this;
-        }
+                if (!_validOperations.Contains(operation))
+                    _validOperations.Add(operation);
+                if (!_validStatuses.Contains(status))
+                    _validStatuses.Add(status);
+                if (!_validStatuses.Contains(result))
+                    _validStatuses.Add(result);
+            }
 
-        /// <summary>
-        /// 密封工作流状态机
-        /// 密封之前可以用AddRule()定义新的状态转换，但Transition()、ValidStatuses、ValidOperations都不可用
-        /// 密封之后不能再定义状态转换，上述几个成员变为可用
-        /// 密封操作会清理状态机中空的节点
-        /// </summary>
-        public virtual IWorkflow<TStatusEnum, TOperationEnum> Seal()
-        {
-            Sealed = true;
             return this;
         }
 
@@ -122,9 +88,6 @@ namespace StateMachine
         /// <returns>this</returns>
         public virtual TStatusEnum Transition(TStatusEnum status, TOperationEnum operation)
         {
-            if (!Sealed)
-                throw new InvalidOperationException();
-
             try
             {
                 return _dictionary[status][operation];

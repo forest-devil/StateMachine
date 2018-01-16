@@ -58,7 +58,6 @@
     <Compile Include="Status.cs" />
     <Compile Include="Json\StringStatusJsonConverter.cs" />
     <Compile Include="Workflow.cs" />
-    <Compile Include="WorkflowSingleton.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

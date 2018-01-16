@@ -62,11 +62,15 @@
     <Compile Include="Entity\ArticleEntityOfEnum.cs" />
     <Compile Include="Enum\ArticleOperation.cs" />
     <Compile Include="Enum\ArticleStatus.cs" />
+    <Compile Include="Singleton.cs" />
     <Compile Include="Status\MyComplicatedStatus.cs" />
     <Compile Include="Status\MySimplifiedStatus.cs" />
     <Compile Include="Status\MyStatus.cs" />
     <Compile Include="UnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Workflow\MyComplicatedWorkflow.cs" />
+    <Compile Include="Workflow\MySimplifiedWorkflow.cs" />
+    <Compile Include="Workflow\MyWorkflow.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

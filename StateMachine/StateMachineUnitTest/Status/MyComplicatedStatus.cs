@@ -13,6 +13,6 @@ namespace StateMachineTest
         }
 
         public override IWorkflow<ArticleStatus, ArticleOperation> Workflow
-            => WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance;
+            => Singleton<MyComplicatedWorkflow>.Instance;
     }
 }

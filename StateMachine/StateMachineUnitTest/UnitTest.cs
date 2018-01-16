@@ -33,33 +33,6 @@ namespace StateMachineTest
             {
                 cfg.AddProfile<StateMachineAutoMapperProfile>();
             });
-
-            WorkflowSingleton<ArticleStatus, ArticleOperation, MyStatus>.Instance
-                .AddRule(ArticleStatus.已修改,
-                    ArticleOperation.提交, ArticleStatus.已提交)
-                .AddRule(ArticleStatus.已提交,
-                    ArticleOperation.发布, ArticleStatus.已发布)
-                .AddRule(ArticleStatus.已发布,
-                    (ArticleOperation.撤回, ArticleStatus.已修改),
-                    (ArticleOperation.存档, ArticleStatus.已存档))
-                .Seal();
-
-            WorkflowSingleton<ArticleStatus, ArticleOperation, MySimplifiedStatus>.Instance
-                .AddRule(ArticleStatus.已修改,
-                    ArticleOperation.发布, ArticleStatus.已发布)
-                .AddRule(ArticleStatus.已发布,
-                    ArticleOperation.撤回, ArticleStatus.已修改)
-                .Seal();
-
-            WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance
-                .AddRule(ArticleStatus.已修改,
-                    (ArticleOperation.提交, ArticleStatus.已提交),
-                    (ArticleOperation.发布, ArticleStatus.已发布))
-                .AddRule(ArticleStatus.已提交,
-                    ArticleOperation.发布, ArticleStatus.已发布)
-                .AddRule(ArticleStatus.已发布,
-                    ArticleOperation.撤回, ArticleStatus.已修改)
-                .Seal();
         }
 
         [TestMethod]
@@ -178,15 +151,15 @@ namespace StateMachineTest
         [TestMethod]
         public void Test04_UsedStatusesAndOperations()
         {
-            var w1 = WorkflowSingleton<ArticleStatus, ArticleOperation, MyStatus>.Instance;
+            var w1 = Singleton<MyWorkflow>.Instance;
             Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", w1.ValidStatuses));
             Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", w1.ValidOperations));
 
-            var w2 = WorkflowSingleton<ArticleStatus, ArticleOperation, MySimplifiedStatus>.Instance;
+            var w2 = Singleton<MySimplifiedWorkflow>.Instance;
             Assert.AreEqual("已修改,已发布", string.Join(",", w2.ValidStatuses));
             Assert.AreEqual("发布,撤回", string.Join(",", w2.ValidOperations));
 
-            var w3 = WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance;
+            var w3 = Singleton<MyComplicatedWorkflow>.Instance;
             Assert.AreEqual("已修改,已提交,已发布", string.Join(",", w3.ValidStatuses));
             Assert.AreEqual("提交,发布,撤回", string.Join(",", w3.ValidOperations));
         }

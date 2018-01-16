@@ -6,7 +6,7 @@ namespace StateMachineTest
     {
         static MyComplicatedStatus()
         {
-            Workflow<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance
+            WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance
                 .AddRule(ArticleStatus.已修改,
                     (ArticleOperation.提交, ArticleStatus.已提交),
                     (ArticleOperation.发布, ArticleStatus.已发布))
@@ -26,6 +26,6 @@ namespace StateMachineTest
         }
 
         public override IWorkflow<ArticleStatus, ArticleOperation> Workflow
-            => Workflow<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance;
+            => WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance;
     }
 }

@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using StateMachine;
+using StateMachine.AutoMapper;
 using StateMachine.Extensions;
+using StateMachine.Json;
 using System.Collections.Generic;
 using System.Linq;
 

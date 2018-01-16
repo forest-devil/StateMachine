@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace StateMachine
+namespace StateMachine.AutoMapper
 {
     /// <summary>
     /// 用于配置AutoMapper的Profile类。

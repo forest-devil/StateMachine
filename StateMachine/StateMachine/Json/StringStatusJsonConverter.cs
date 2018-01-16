@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace StateMachine
+namespace StateMachine.Json
 {
     /// <summary>
     /// 用于Json.NET的序列化/反序列化转换器

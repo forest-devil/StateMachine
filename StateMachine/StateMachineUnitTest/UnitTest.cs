@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using StateMachine;
 using StateMachine.AutoMapper;
 using StateMachine.Extensions;
 using StateMachine.Json;
@@ -32,6 +33,33 @@ namespace StateMachineTest
             {
                 cfg.AddProfile<StateMachineAutoMapperProfile>();
             });
+
+            WorkflowSingleton<ArticleStatus, ArticleOperation, MyStatus>.Instance
+                .AddRule(ArticleStatus.已修改,
+                    ArticleOperation.提交, ArticleStatus.已提交)
+                .AddRule(ArticleStatus.已提交,
+                    ArticleOperation.发布, ArticleStatus.已发布)
+                .AddRule(ArticleStatus.已发布,
+                    (ArticleOperation.撤回, ArticleStatus.已修改),
+                    (ArticleOperation.存档, ArticleStatus.已存档))
+                .Seal();
+
+            WorkflowSingleton<ArticleStatus, ArticleOperation, MySimplifiedStatus>.Instance
+                .AddRule(ArticleStatus.已修改,
+                    ArticleOperation.发布, ArticleStatus.已发布)
+                .AddRule(ArticleStatus.已发布,
+                    ArticleOperation.撤回, ArticleStatus.已修改)
+                .Seal();
+
+            WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance
+                .AddRule(ArticleStatus.已修改,
+                    (ArticleOperation.提交, ArticleStatus.已提交),
+                    (ArticleOperation.发布, ArticleStatus.已发布))
+                .AddRule(ArticleStatus.已提交,
+                    ArticleOperation.发布, ArticleStatus.已发布)
+                .AddRule(ArticleStatus.已发布,
+                    ArticleOperation.撤回, ArticleStatus.已修改)
+                .Seal();
         }
 
         [TestMethod]
@@ -55,6 +83,10 @@ namespace StateMachineTest
             var s3 = new MyStatus(article3.Status);
             Assert.AreEqual(ArticleStatus.已发布, s3.Value);
             Assert.AreEqual("已发布", s3.ToString());
+
+            //试图用不合法的状态进行初始化，会默认设置为合法的第一个状态
+            var s31 = new MySimplifiedStatus(ArticleStatus.已存档);
+            Assert.AreEqual(ArticleStatus.已修改, s31.Value);
 
             //序列化、反序列化
             var s4 = new MyStatus(ArticleStatus.已发布);
@@ -146,17 +178,17 @@ namespace StateMachineTest
         [TestMethod]
         public void Test04_UsedStatusesAndOperations()
         {
-            var s1 = new MyStatus(ArticleStatus.已存档);
-            Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", s1.Workflow.ValidStatuses));
-            Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", s1.Workflow.ValidOperations));
+            var w1 = WorkflowSingleton<ArticleStatus, ArticleOperation, MyStatus>.Instance;
+            Assert.AreEqual("已修改,已提交,已发布,已存档", string.Join(",", w1.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回,存档", string.Join(",", w1.ValidOperations));
 
-            var s2 = new MySimplifiedStatus(ArticleStatus.已发布);
-            Assert.AreEqual("已修改,已发布", string.Join(",", s2.Workflow.ValidStatuses));
-            Assert.AreEqual("发布,撤回", string.Join(",", s2.Workflow.ValidOperations));
+            var w2 = WorkflowSingleton<ArticleStatus, ArticleOperation, MySimplifiedStatus>.Instance;
+            Assert.AreEqual("已修改,已发布", string.Join(",", w2.ValidStatuses));
+            Assert.AreEqual("发布,撤回", string.Join(",", w2.ValidOperations));
 
-            var s3 = new MyComplicatedStatus(ArticleStatus.已发布);
-            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", s3.Workflow.ValidStatuses));
-            Assert.AreEqual("提交,发布,撤回", string.Join(",", s3.Workflow.ValidOperations));
+            var w3 = WorkflowSingleton<ArticleStatus, ArticleOperation, MyComplicatedStatus>.Instance;
+            Assert.AreEqual("已修改,已提交,已发布", string.Join(",", w3.ValidStatuses));
+            Assert.AreEqual("提交,发布,撤回", string.Join(",", w3.ValidOperations));
         }
 
         [TestMethod]

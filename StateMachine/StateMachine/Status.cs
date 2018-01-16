@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace StateMachine
 {
@@ -13,23 +14,42 @@ namespace StateMachine
         where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
         where TStatus : Status<TStatusEnum, TOperationEnum, TStatus>
     {
+        private TStatusEnum _value;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public Status()
+        {
+            Value = Workflow.ValidStatuses.FirstOrDefault();
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="status">状态Enum</param>
-        public Status(TStatusEnum status) => Value = status;
+        public Status(TStatusEnum status) : this() => Value = status;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="status">状态字符串</param>
-        public Status(string status)
+        public Status(string status) : this()
         {
             Enum.TryParse(status, out TStatusEnum statusValue);
             Value = statusValue;
         }
 
-        public TStatusEnum Value { get; private set; }
+        public TStatusEnum Value
+        {
+            get => _value;
+            private set
+            {
+                if (!Workflow.ValidStatuses.Contains(value))
+                    value = Workflow.ValidStatuses.FirstOrDefault();
+                _value = value;
+            }
+        }
 
         object IStatus.Value => Value;
         public virtual IWorkflow<TStatusEnum, TOperationEnum> Workflow { get; }

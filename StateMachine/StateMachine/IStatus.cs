@@ -22,7 +22,7 @@
     public interface IStatus<TStatusEnum, TOperationEnum, out TStatus> : IStatus
         where TStatusEnum : struct          // 实际上要求是Enum，但是语法不支持直接写Enum
         where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
-        where TStatus : Status<TStatusEnum, TOperationEnum, TStatus>
+        where TStatus : IStatus<TStatusEnum, TOperationEnum, TStatus>
     {
         /// <summary>
         /// [只读] Enum类型的内部状态值

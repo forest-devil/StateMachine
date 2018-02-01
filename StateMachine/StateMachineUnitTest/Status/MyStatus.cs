@@ -4,9 +4,7 @@ namespace StateMachineTest
 {
     public class MyStatus : Status<ArticleStatus, ArticleOperation, MyStatus>
     {
-        public MyStatus() : base()
-        {
-        }
+        private IWorkflow<ArticleStatus, ArticleOperation> _workflow = Singleton<MyWorkflow>.Instance;
 
         public MyStatus(ArticleStatus status) : base(status)
         {
@@ -16,7 +14,13 @@ namespace StateMachineTest
         {
         }
 
+        public MyStatus(IWorkflow<ArticleStatus, ArticleOperation> workflow, ArticleStatus status)
+        {
+            _workflow = workflow;
+            Value = status;
+        }
+
         public override IWorkflow<ArticleStatus, ArticleOperation> Workflow
-            => Singleton<MyWorkflow>.Instance;
+            => _workflow;
     }
 }

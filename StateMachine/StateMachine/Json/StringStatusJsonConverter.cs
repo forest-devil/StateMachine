@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace StateMachine.Json
 {
@@ -25,7 +27,19 @@ namespace StateMachine.Json
         /// <param name="serializer">JsonSerializer实例</param>
         /// <returns>发序列化后的对象</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            => Activator.CreateInstance(objectType, (JToken.Load(reader)).ToString());
+        {
+            var value = (JToken.Load(reader)).ToString();
+            var statusEnumType = objectType.BaseType.GetGenericArguments()[0];
+            var enumValue = Enum.Parse(statusEnumType, value);
+            if (!objectType.IsAbstract)
+            {
+                return Activator.CreateInstance(objectType, enumValue);
+            }
+            else
+            {
+                return objectType.GetMethod("CreateInstance").Invoke(null, new[] { enumValue });
+            }
+        }
 
         /// <summary>
         /// 序列化

@@ -5,6 +5,7 @@ using StateMachine;
 using StateMachine.AutoMapper;
 using StateMachine.Extensions;
 using StateMachine.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -58,8 +59,12 @@ namespace StateMachineTest
             Assert.AreEqual("已发布", s3.ToString());
 
             //试图用不合法的状态进行初始化，会默认设置为合法的第一个状态
-            var s31 = new MySimplifiedStatus(ArticleStatus.已存档);
+            var s31 = new MyStatus(ArticleStatus.无效状态);
             Assert.AreEqual(ArticleStatus.已修改, s31.Value);
+
+            var s32 = new MyStatus(Singleton<MySimplifiedWorkflow>.Instance, ArticleStatus.已存档);
+            Assert.IsInstanceOfType(s32.Workflow, typeof(MySimplifiedWorkflow));
+            Assert.AreEqual(ArticleStatus.已修改, s32.Value);
 
             //序列化、反序列化
             var s4 = new MyStatus(ArticleStatus.已发布);
@@ -67,9 +72,9 @@ namespace StateMachineTest
             var d4 = (MyStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MyStatus));
             Assert.AreEqual(ArticleStatus.已发布, d4.Value);
 
-            var s5 = new MySimplifiedStatus(ArticleStatus.已发布);
+            MyComplicatedStatus s5 = new 已发布();
             Assert.AreEqual("\"已发布\"", JsonConvert.SerializeObject(s4));
-            var d5 = (MySimplifiedStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MySimplifiedStatus));
+            var d5 = (MyComplicatedStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MyComplicatedStatus));
             Assert.AreEqual(ArticleStatus.已发布, d5.Value);
 
             var articleDto = Mapper.Map<ArticleDto>(articles[5]);
@@ -124,7 +129,7 @@ namespace StateMachineTest
             Assert.AreEqual(ArticleStatus.已发布, s2.Value);
 
             //使用不同的工作流
-            var s4 = new MySimplifiedStatus(ArticleStatus.已修改);
+            var s4 = new MyStatus(Singleton<MySimplifiedWorkflow>.Instance, ArticleStatus.已修改);
             Assert.AreEqual(ArticleStatus.已修改, s4.Value);
             s4 += ArticleOperation.提交;      // 这个工作流不支持提交操作，状态应当不变
             Assert.AreEqual(ArticleStatus.已修改, s4.Value);
@@ -134,18 +139,42 @@ namespace StateMachineTest
             Assert.AreEqual(ArticleStatus.已修改, s4.Value);
 
             //使用不同的工作流
-            var s5 = new MyComplicatedStatus(ArticleStatus.已修改);
+            MyComplicatedStatus s5 = Singleton<已修改>.Instance;
             Assert.AreEqual(ArticleStatus.已修改, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已修改));
+            s5.Edit(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddRemark(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddComment(null));
             s5 += ArticleOperation.发布;      // 这个工作流允许直接从已修改状态发布
-            Assert.AreEqual(ArticleStatus.已发布, s2.Value);
+            Assert.AreEqual(ArticleStatus.已发布, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已发布));
+            s5.AddComment(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.Edit(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddRemark(null));
             s5 += ArticleOperation.撤回;
             Assert.AreEqual(ArticleStatus.已修改, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已修改));
+            s5.Edit(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddRemark(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddComment(null));
             s5 += ArticleOperation.提交;
             Assert.AreEqual(ArticleStatus.已提交, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已提交));
+            s5.AddRemark(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.Edit(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddComment(null));
             s5 += ArticleOperation.发布;
             Assert.AreEqual(ArticleStatus.已发布, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已发布));
+            s5.AddComment(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.Edit(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddRemark(null));
             s5 += ArticleOperation.撤回;
             Assert.AreEqual(ArticleStatus.已修改, s5.Value);
+            Assert.IsInstanceOfType(s5, typeof(已修改));
+            s5.Edit(null);
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddRemark(null));
+            Assert.ThrowsException<InvalidOperationException>(() => s5.AddComment(null));
         }
 
         [TestMethod]

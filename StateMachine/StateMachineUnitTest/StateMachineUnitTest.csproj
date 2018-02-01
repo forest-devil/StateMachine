@@ -63,8 +63,8 @@
     <Compile Include="Enum\ArticleOperation.cs" />
     <Compile Include="Enum\ArticleStatus.cs" />
     <Compile Include="Singleton.cs" />
+    <Compile Include="Status\IArticleOperations.cs" />
     <Compile Include="Status\MyComplicatedStatus.cs" />
-    <Compile Include="Status\MySimplifiedStatus.cs" />
     <Compile Include="Status\MyStatus.cs" />
     <Compile Include="UnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -28,22 +28,22 @@ namespace StateMachine
         /// 构造函数
         /// </summary>
         /// <param name="status">状态Enum</param>
-        public Status(TStatusEnum status) : this() => Value = status;
+        public Status(TStatusEnum status) => Value = status;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="status">状态字符串</param>
-        public Status(string status) : this()
+        public Status(string status)
         {
             Enum.TryParse(status, out TStatusEnum statusValue);
             Value = statusValue;
         }
 
-        public TStatusEnum Value
+        public virtual TStatusEnum Value
         {
             get => _value;
-            private set
+            protected set
             {
                 if (!Workflow.ValidStatuses.Contains(value))
                     value = Workflow.ValidStatuses.FirstOrDefault();
@@ -52,6 +52,7 @@ namespace StateMachine
         }
 
         object IStatus.Value => Value;
+
         public virtual IWorkflow<TStatusEnum, TOperationEnum> Workflow { get; }
         IWorkflow IStatus.Workflow => Workflow;
 

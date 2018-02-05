@@ -57,7 +57,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Dto\ArticleDto.cs" />
+    <Compile Include="Domain\DomainArticle.cs" />
     <Compile Include="Entity\ArticleEntity.cs" />
     <Compile Include="Entity\ArticleEntityOfEnum.cs" />
     <Compile Include="Enum\ArticleOperation.cs" />

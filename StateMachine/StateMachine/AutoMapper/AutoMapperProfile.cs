@@ -35,8 +35,28 @@ namespace StateMachine.AutoMapper
             {
                 var typeOfEnum = statusType.BaseType.GetGenericArguments()[0];
 
-                CreateMap(typeof(object), statusType)
-                    .ConstructUsing(status => Activator.CreateInstance(statusType, status));
+                if (!statusType.IsAbstract)
+                {
+                    CreateMap(typeof(object), statusType)
+                        .ConstructUsing(status => Activator.CreateInstance(statusType, status));
+                }
+                else
+                {
+                    CreateMap(typeof(string), statusType)
+                        .ConstructUsing(status =>
+                        {
+                            var enumValue = Enum.Parse(typeOfEnum, status as string);
+                            return statusType.GetMethod("CreateInstance").Invoke(null, new[] { enumValue });
+                        });
+                    CreateMap(typeof(object), statusType)
+                        .ConstructUsing(status =>
+                        {
+                            if (status.GetType() == typeOfEnum)
+                                return statusType.GetMethod("CreateInstance").Invoke(null, new[] { status });
+                            else
+                                throw new ArgumentException();
+                        });
+                }
                 CreateMap(statusType, typeof(string))
                     .ConstructUsing(status => status.ToString());
                 CreateMap(statusType, typeOfEnum)

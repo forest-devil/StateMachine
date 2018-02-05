@@ -69,17 +69,17 @@ namespace StateMachineTest
             //序列化、反序列化
             var s4 = new MyStatus(ArticleStatus.已发布);
             Assert.AreEqual("\"已发布\"", JsonConvert.SerializeObject(s4));
-            var d4 = (MyStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MyStatus));
+            var d4 = JsonConvert.DeserializeObject<MyStatus>("\"已发布\"");
             Assert.AreEqual(ArticleStatus.已发布, d4.Value);
 
-            MyComplicatedStatus s5 = new 已发布();
+            var s5 = MyComplicatedStatus.CreateInstance(ArticleStatus.已发布);
             Assert.AreEqual("\"已发布\"", JsonConvert.SerializeObject(s4));
-            var d5 = (MyComplicatedStatus)JsonConvert.DeserializeObject("\"已发布\"", typeof(MyComplicatedStatus));
+            var d5 = JsonConvert.DeserializeObject<MyComplicatedStatus>("\"已发布\"");
             Assert.AreEqual(ArticleStatus.已发布, d5.Value);
 
-            var articleDto = Mapper.Map<ArticleDto>(articles[5]);
-            Assert.AreEqual("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", JsonConvert.SerializeObject(articleDto));
-            var dto = (ArticleDto)JsonConvert.DeserializeObject("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", typeof(ArticleDto));
+            var domainArticle = Mapper.Map<DomainArticle>(articles[5]);
+            Assert.AreEqual("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", JsonConvert.SerializeObject(domainArticle));
+            var dto = (DomainArticle)JsonConvert.DeserializeObject("{\"Content\":null,\"Status\":\"已发布\",\"Title\":\"文章6\"}", typeof(DomainArticle));
             Assert.AreEqual(ArticleStatus.已发布, dto.Status.Value);
         }
 
@@ -236,18 +236,18 @@ namespace StateMachineTest
         public void Test05_03_FilterByStatusForDto()
         {
             //模拟从数据库取出并映射成Dto，类型是IEnumerable<T>
-            var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(articles);
+            var domainArticles = Mapper.Map<IEnumerable<DomainArticle>>(articles);
 
-            var q1 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已修改);
+            var q1 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已修改);
             Assert.AreEqual("文章1", string.Join(",", q1.Select(a => a.Title)));
 
-            var q2 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交);
+            var q2 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交);
             Assert.AreEqual("文章2,文章4", string.Join(",", q2.Select(a => a.Title)));
 
-            var q3 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已发布);
+            var q3 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已发布);
             Assert.AreEqual("文章3,文章5,文章6", string.Join(",", q3.Select(a => a.Title)));
 
-            var q4 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
+            var q4 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
             Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", q4.Select(a => a.Title)));
         }
 
@@ -262,44 +262,44 @@ namespace StateMachineTest
             Assert.AreEqual(ArticleStatus.已发布, Mapper.Map<ArticleStatus>(sts));
 
             //从Entity映射到Dto
-            var articleDto = Mapper.Map<ArticleDto>(articles[5]);
-            Assert.AreEqual("已发布", articleDto.Status.ToString());
+            var domainArticle = Mapper.Map<DomainArticle>(articles[5]);
+            Assert.AreEqual("已发布", domainArticle.Status.ToString());
 
             //映射
             var s1 = new MyStatus(ArticleStatus.已发布);
             Assert.AreEqual("已发布", Mapper.Map<string>(s1));
 
             //模拟从Entity映射到Dto
-            articleDto = Mapper.Map<ArticleDto>(articles[0]);
-            Assert.AreEqual("已修改", articleDto.Status.ToString());
+            domainArticle = Mapper.Map<DomainArticle>(articles[0]);
+            Assert.AreEqual("已修改", domainArticle.Status.ToString());
 
-            articleDto.Status += ArticleOperation.提交;
-            Assert.AreEqual(ArticleStatus.已提交, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.提交;
+            Assert.AreEqual(ArticleStatus.已提交, domainArticle.Status.Value);
 
-            articleDto.Status += ArticleOperation.发布;
-            Assert.AreEqual(ArticleStatus.已发布, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.发布;
+            Assert.AreEqual(ArticleStatus.已发布, domainArticle.Status.Value);
 
-            articleDto.Status += ArticleOperation.撤回;
-            Assert.AreEqual(ArticleStatus.已修改, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.撤回;
+            Assert.AreEqual(ArticleStatus.已修改, domainArticle.Status.Value);
 
             //模拟从Dto映射到Entity
-            articleDto.Status += ArticleOperation.提交;
-            var articleEntity = Mapper.Map<ArticleEntity>(articleDto);
+            domainArticle.Status += ArticleOperation.提交;
+            var articleEntity = Mapper.Map<ArticleEntity>(domainArticle);
             Assert.AreEqual("已提交", articleEntity.Status);
 
             //模拟从数据库取出并映射成Dto，类型是IEnumerable<T>
-            var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(articles);
+            var domainArticles = Mapper.Map<IEnumerable<DomainArticle>>(articles);
 
-            var q1 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已修改);
+            var q1 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已修改);
             Assert.AreEqual("文章1", string.Join(",", q1.Select(a => a.Title)));
 
-            var q2 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交);
+            var q2 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交);
             Assert.AreEqual("文章2,文章4", string.Join(",", q2.Select(a => a.Title)));
 
-            var q3 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已发布);
+            var q3 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已发布);
             Assert.AreEqual("文章3,文章5,文章6", string.Join(",", q3.Select(a => a.Title)));
 
-            var q4 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
+            var q4 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
             Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", q4.Select(a => a.Title)));
         }
 
@@ -308,20 +308,20 @@ namespace StateMachineTest
         {
             //模拟从Entity映射到Dto
             var entity = new ArticleEntityOfEnum { Title = "另一种文章1", Status = ArticleStatus.已发布 };
-            var articleDto = Mapper.Map<ArticleDto>(entity);
-            Assert.AreEqual(ArticleStatus.已发布.ToString(), articleDto.Status.ToString());
+            var domainArticle = Mapper.Map<DomainArticle>(entity);
+            Assert.AreEqual(ArticleStatus.已发布.ToString(), domainArticle.Status.ToString());
 
-            articleDto.Status += ArticleOperation.撤回;
-            Assert.AreEqual(ArticleStatus.已修改, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.撤回;
+            Assert.AreEqual(ArticleStatus.已修改, domainArticle.Status.Value);
 
-            articleDto.Status += ArticleOperation.提交;
-            Assert.AreEqual(ArticleStatus.已提交, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.提交;
+            Assert.AreEqual(ArticleStatus.已提交, domainArticle.Status.Value);
 
-            articleDto.Status += ArticleOperation.发布;
-            Assert.AreEqual(ArticleStatus.已发布, articleDto.Status.Value);
+            domainArticle.Status += ArticleOperation.发布;
+            Assert.AreEqual(ArticleStatus.已发布, domainArticle.Status.Value);
 
             //模拟从Dto映射到Entity
-            var articleEntity = Mapper.Map<ArticleEntityOfEnum>(articleDto);
+            var articleEntity = Mapper.Map<ArticleEntityOfEnum>(domainArticle);
             Assert.AreEqual(ArticleStatus.已发布, articleEntity.Status);
 
             //模拟从数据库取出
@@ -331,15 +331,15 @@ namespace StateMachineTest
             Assert.AreEqual("文章1", string.Join(",", f1.Select(a => a.Title)));
 
             //映射成Dto
-            var articleDtos = Mapper.Map<IEnumerable<ArticleDto>>(entities);
+            var domainArticles = Mapper.Map<IEnumerable<DomainArticle>>(entities);
 
-            var d2 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交);
+            var d2 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交);
             Assert.AreEqual("文章2,文章4", string.Join(",", d2.Select(a => a.Title)));
 
-            var d3 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已发布);
+            var d3 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已发布);
             Assert.AreEqual("文章3,文章5,文章6", string.Join(",", d3.Select(a => a.Title)));
 
-            var d4 = articleDtos.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
+            var d4 = domainArticles.FilterByStatus(article => article.Status, ArticleStatus.已提交, ArticleStatus.已发布);
             Assert.AreEqual("文章2,文章3,文章4,文章5,文章6", string.Join(",", d4.Select(a => a.Title)));
         }
     }

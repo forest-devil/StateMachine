@@ -10,6 +10,9 @@
         /// </summary>
         object Value { get; }
 
+        /// <summary>
+        /// 工作流
+        /// </summary>
         IWorkflow Workflow { get; }
     }
 
@@ -29,6 +32,9 @@
         /// </summary>
         new TStatusEnum Value { get; }
 
+        /// <summary>
+        /// 工作流
+        /// </summary>
         new IWorkflow<TStatusEnum, TOperationEnum> Workflow { get; }
 
         /// <summary>

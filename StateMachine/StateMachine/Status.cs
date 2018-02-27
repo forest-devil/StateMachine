@@ -40,6 +40,9 @@ namespace StateMachine
             Value = statusValue;
         }
 
+        /// <summary>
+        /// 状态值
+        /// </summary>
         public virtual TStatusEnum Value
         {
             get => _value;
@@ -53,7 +56,11 @@ namespace StateMachine
 
         object IStatus.Value => Value;
 
+        /// <summary>
+        /// 工作流
+        /// </summary>
         public virtual IWorkflow<TStatusEnum, TOperationEnum> Workflow { get; }
+
         IWorkflow IStatus.Workflow => Workflow;
 
         /// <summary>

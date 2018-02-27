@@ -15,13 +15,25 @@ namespace StateMachine
         where TStatusEnum : struct          // 实际上要求是Enum，但是语法不支持直接写Enum
         where TOperationEnum : struct       // 实际上要求是Enum，但是语法不支持直接写Enum
     {
+        /// <summary>
+        /// 状态转换字典
+        /// </summary>
         protected readonly Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>> _dictionary
              = new Dictionary<TStatusEnum, Dictionary<TOperationEnum, TStatusEnum>>();
 
+        /// <summary>
+        /// 有效操作
+        /// </summary>
         protected readonly List<TOperationEnum> _validOperations = new List<TOperationEnum>();
 
+        /// <summary>
+        /// 有效状态
+        /// </summary>
         protected readonly List<TStatusEnum> _validStatuses = new List<TStatusEnum>();
 
+        /// <summary>
+        /// 工作流
+        /// </summary>
         public Workflow()
         {
             foreach (TStatusEnum status in Enum.GetValues(typeof(TStatusEnum)))
@@ -30,13 +42,22 @@ namespace StateMachine
             }
         }
 
+        /// <summary>
+        /// 有效状态
+        /// </summary>
         public virtual IEnumerable<TOperationEnum> ValidOperations => _validOperations;
+
         IEnumerable IWorkflow.ValidOperations => ValidOperations;
+
+        /// <summary>
+        /// 有效状态
+        /// </summary>
         public virtual IEnumerable<TStatusEnum> ValidStatuses => _validStatuses;
+
         IEnumerable IWorkflow.ValidStatuses => ValidStatuses;
 
         /// <summary>
-        /// 设置转换规则，可以一次设置多个分支。建议在Status具体类的static构造函数中调用，并适当格式化
+        /// 设置转换规则，可以一次设置多个分支。
         /// </summary>
         /// <param name="status">原状态</param>
         /// <param name="rhs">转换规则，每一条为一个tuple，格式为(operation, result)</param>
@@ -54,7 +75,7 @@ namespace StateMachine
         }
 
         /// <summary>
-        /// 设置转换规则。只能在Seal()之前调用，否则抛出异常
+        /// 设置转换规则
         /// </summary>
         /// <param name="status">原状态</param>
         /// <param name="operation">操作</param>
@@ -84,8 +105,9 @@ namespace StateMachine
         /// <summary>
         /// 转换状态
         /// </summary>
+        /// <param name="status">原状态</param>
         /// <param name="operation">操作</param>
-        /// <returns>this</returns>
+        /// <returns>转换后状态</returns>
         public virtual TStatusEnum Transition(TStatusEnum status, TOperationEnum operation)
         {
             try
